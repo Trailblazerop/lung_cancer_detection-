@@ -9,7 +9,7 @@
 
 import streamlit as st
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import tensorflow as tf
 import os
 import time
@@ -34,14 +34,18 @@ st.markdown("""
 
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
-        color: #2c3e50;
+        background: linear-gradient(135deg, #08101f 0%, #12203a 100%) !important;
+        color: #eef2ff !important;
+    }
+
+    body, div, section, span, p, h1, h2, h3, h4, h5, h6, label, button {
+        color: #eef2ff !important;
     }
 
     .main-header {
         position: relative;
         overflow: hidden;
-        background: linear-gradient(135deg, #3d72e8 0%, #6997ff 48%, #94b9ff 100%);
+        background: linear-gradient(135deg, #0f2143 0%, #142d5f 48%, #1b3b7b 100%);
         padding: 4rem 2rem 3rem;
         border-radius: 32px;
         margin-bottom: 2.4rem;
@@ -129,8 +133,8 @@ st.markdown("""
     }
 
     .hero-stat {
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.20);
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.16);
         border-radius: 22px;
         padding: 1rem 1.2rem;
         min-height: 120px;
@@ -138,13 +142,13 @@ st.markdown("""
 
     .hero-stat strong {
         display: block;
-        color: #ffffff;
+        color: #f7fbff;
         font-size: 1.55rem;
         margin-bottom: 0.35rem;
     }
 
     .hero-stat span {
-        color: rgba(255,255,255,0.85);
+        color: rgba(255,255,255,0.92);
         font-size: 0.95rem;
     }
 
@@ -257,15 +261,54 @@ st.markdown("""
         box-shadow: 0 28px 60px rgba(39, 174, 96, 0.35);
     }
 
+    .result-invalid {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);
+        color: #f8fafc;
+        padding: 2.2rem 2.8rem;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 1.9rem;
+        font-weight: 800;
+        margin: 1.8rem 0;
+        box-shadow: 0 16px 45px rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.45);
+    }
+
+    .result-invalid:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.8);
+    }
+
+    .feedback-alert,
+    .feedback-note {
+        border-radius: 18px;
+        padding: 1.4rem 1.8rem;
+        margin: 1rem 0;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .feedback-alert {
+        background: rgba(220, 38, 38, 0.18);
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        color: #f8fafc;
+    }
+
+    .feedback-note {
+        background: rgba(29, 78, 216, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.28);
+        color: #f8fafc;
+    }
+
     .info-card {
-        background: linear-gradient(135deg, #ffffff 0%, rgba(250, 252, 255, 0.99) 100%);
-        border: 1.5px solid rgba(94, 125, 255, 0.22);
+        background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 100%);
+        border: 1.5px solid rgba(255,255,255,0.16);
         border-radius: 20px;
         padding: 2rem 2.5rem;
         margin: 1.5rem 0;
-        box-shadow: 0 8px 35px rgba(94, 125, 255, 0.12);
+        box-shadow: 0 8px 35px rgba(0, 0, 0, 0.25);
         transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
     }
 
     .info-card:hover {
@@ -317,38 +360,39 @@ st.markdown("""
     }
 
     .stat-box {
-        background: linear-gradient(135deg, #ffffff, #f8f9fa);
-        border: 1px solid #dee2e6;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border: 1px solid rgba(148, 163, 184, 0.26);
         border-radius: 15px;
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
+        box-shadow: 0 8px 30px rgba(7, 11, 21, 0.45);
+        transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
     }
 
     .stat-box:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 30px rgba(7, 11, 21, 0.55);
+        border-color: rgba(148, 163, 184, 0.45);
     }
 
     .stat-box h3 {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #f8fafc;
         margin: 0;
         font-family: 'Roboto', sans-serif;
     }
 
     .stat-box p {
-        font-size: 0.9rem;
-        color: #7f8c8d;
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.8);
         margin: 8px 0 0 0;
         font-weight: 500;
     }
 
     .stFileUploader {
-        background: linear-gradient(135deg, rgba(94, 125, 255, 0.08) 0%, rgba(122, 163, 255, 0.06) 100%);
-        border: 2px dashed rgba(94, 125, 255, 0.5);
+        background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.09) 100%);
+        border: 2px dashed rgba(255,255,255,0.28);
         border-radius: 18px;
         padding: 2.2rem;
         margin: 2rem 0;
@@ -477,11 +521,19 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
 
 
 def is_grayscale_image(image: Image.Image, diff_threshold: int = 15, color_fraction: float = 0.05) -> bool:
-    """Heuristic check: CT scan images are typically grayscale, not color photos."""
+    """Heuristic check: CT scan images are typically grayscale, not color photographs."""
     rgb = np.array(image.convert("RGB"), dtype=np.int16)
     diff = np.abs(rgb[:, :, 0] - rgb[:, :, 1]) + np.abs(rgb[:, :, 1] - rgb[:, :, 2]) + np.abs(rgb[:, :, 0] - rgb[:, :, 2])
     color_pixels = np.count_nonzero(diff > diff_threshold)
     return (color_pixels / diff.size) < color_fraction
+
+
+def compute_edge_density(image: Image.Image) -> float:
+    """Estimate image texture using edge detection to recognize CT scan structure."""
+    gray = image.convert("L")
+    edges = gray.filter(ImageFilter.FIND_EDGES)
+    edge_arr = np.array(edges, dtype=np.uint8)
+    return np.count_nonzero(edge_arr > 30) / edge_arr.size
 
 
 def validate_ct_scan_image(image: Image.Image) -> tuple[bool, str]:
@@ -491,6 +543,39 @@ def validate_ct_scan_image(image: Image.Image) -> tuple[bool, str]:
             "This image appears to be a color photograph rather than a lung CT scan. "
             "Please upload a valid grayscale CT scan image for reliable results."
         )
+
+    gray = image.convert("L")
+    arr = np.array(gray, dtype=np.uint8)
+    mean_val = np.mean(arr)
+    std_val = np.std(arr)
+    edge_density = compute_edge_density(image)
+    bright_ratio = np.mean(arr > 230)
+    dark_ratio = np.mean(arr < 20)
+
+    if mean_val < 20 or mean_val > 230:
+        return False, (
+            "The brightness level of this image does not match typical lung CT scans. "
+            "Please upload a proper scan image."
+        )
+
+    if std_val < 22:
+        return False, (
+            "The uploaded image has very low contrast and lacks the detailed structure expected from a CT scan. "
+            "Please upload a valid lung CT scan."
+        )
+
+    if edge_density < 0.007:
+        return False, (
+            "This image does not contain enough structural texture to be a CT scan. "
+            "Please upload a proper lung CT scan image."
+        )
+
+    if bright_ratio > 0.45 or dark_ratio > 0.45:
+        return False, (
+            "The image appears either too bright or too dark for a lung CT scan. "
+            "Please upload a valid scan image for accurate analysis."
+        )
+
     return True, ""
 
 # ─────────────────────────────────────────────
@@ -651,7 +736,7 @@ st.markdown("### 📤 Upload CT Scan Image")
 uploaded_file = st.file_uploader(
     "Choose a CT Scan image (JPG, PNG, JPEG)",
     type=["jpg", "jpeg", "png"],
-    help="Upload a lung CT scan image for analysis. Color photographs are not valid inputs."
+    help="Only upload lung CT scan images. Random photographs or non-CT images will be rejected."
 )
 
 if uploaded_file is not None:
@@ -662,14 +747,24 @@ if uploaded_file is not None:
 
     with col1:
         st.markdown("#### 🖼️ Uploaded CT Scan")
-        st.image(image, use_column_width=True, caption="Input CT Scan Image")
+        st.image(image, caption="Input CT Scan Image", width=420)
 
     with col2:
         st.markdown("#### 🔬 Analysis Results")
 
         if not valid_image:
-            st.error("This image is not a valid CT scan image. Please upload a proper lung CT scan in grayscale format.")
-            st.warning(validation_message)
+            st.markdown(
+                f'<div class="result-invalid">⚠️ INVALID INPUT</div>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                f'<div class="feedback-alert">{validation_message}</div>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<div class="feedback-note">Please upload a proper lung CT scan image in grayscale format. This app cannot classify random photos or unrelated images.</div>',
+                unsafe_allow_html=True
+            )
         else:
             with st.spinner("Analyzing CT scan... Please wait"):
                 time.sleep(1)
